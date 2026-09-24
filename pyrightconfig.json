@@ -1,0 +1,10 @@
+{
+  "include": [
+    ".",
+    "src"
+  ],
+  "extraPaths": [
+    "src",
+    "C:\\Users\\ijcho\\anaconda3\\Lib\\site-packages"
+  ]
+}
