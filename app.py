@@ -7,41 +7,15 @@ Author: Development Agent (Pair-programmed with User)
 Dataset: CDC Provisional Natality Data (2025)
 """
 
+import os
 import sys
 from pathlib import Path
 from typing import List, Tuple
-
-# Ensure project root is in sys.path so modules in 'src' can be imported reliably
-# on cloud deployment platforms such as Streamlit Community Cloud
-ROOT_DIR = Path(__file__).resolve().parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
 import pandas as pd
 import streamlit as st
 
-# Internal modular imports
-from src.data_loader import MONTH_ORDER, load_data
-from src.metrics import (
-    compute_kpis,
-    get_monthly_by_sex,
-    get_monthly_summary,
-    get_sex_summary,
-    get_state_month_matrix,
-    get_state_summary,
-)
-from src.charts import (
-    plot_choropleth_map,
-    plot_monthly_by_sex_trend,
-    plot_monthly_trend,
-    plot_sex_comparison,
-    plot_state_month_heatmap,
-    plot_state_ranking,
-    plot_top_bottom_comparison,
-)
-
 # -----------------------------------------------------------------------------
-# 1. Page Configuration & Styling
+# 1. Page Configuration & Path Setup
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="CDC 2025 Natality Explorer",
@@ -49,6 +23,71 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Ensure both project root and src/ directory are in sys.path
+ROOT_DIR = Path(__file__).resolve().parent
+SRC_DIR = ROOT_DIR / "src"
+for path_dir in [ROOT_DIR, SRC_DIR]:
+    if str(path_dir) not in sys.path:
+        sys.path.insert(0, str(path_dir))
+
+# Modular imports with fallback to handle both package ('src.X') and flat ('X') repository structures
+try:
+    from src.data_loader import MONTH_ORDER, load_data
+    from src.metrics import (
+        compute_kpis,
+        get_monthly_by_sex,
+        get_monthly_summary,
+        get_sex_summary,
+        get_state_month_matrix,
+        get_state_summary,
+    )
+    from src.charts import (
+        plot_choropleth_map,
+        plot_monthly_by_sex_trend,
+        plot_monthly_trend,
+        plot_sex_comparison,
+        plot_state_month_heatmap,
+        plot_state_ranking,
+        plot_top_bottom_comparison,
+    )
+except ModuleNotFoundError:
+    try:
+        from data_loader import MONTH_ORDER, load_data
+        from metrics import (
+            compute_kpis,
+            get_monthly_by_sex,
+            get_monthly_summary,
+            get_sex_summary,
+            get_state_month_matrix,
+            get_state_summary,
+        )
+        from charts import (
+            plot_choropleth_map,
+            plot_monthly_by_sex_trend,
+            plot_monthly_trend,
+            plot_sex_comparison,
+            plot_state_month_heatmap,
+            plot_state_ranking,
+            plot_top_bottom_comparison,
+        )
+    except ModuleNotFoundError as err:
+        all_files = []
+        for root, dirs, files in os.walk("."):
+            for f in files:
+                all_files.append(os.path.join(root, f))
+        file_tree = "\n".join(sorted(all_files)) if all_files else "(no files found)"
+        st.error(
+            f"### ⚠️ GitHub Repository Structure Error\n\n"
+            f"**Error Details:** `{err}`\n\n"
+            "Streamlit Cloud cannot locate `data_loader.py`, `metrics.py`, or `charts.py`.\n\n"
+            f"**Files currently detected in your GitHub deployment container:**\n"
+            f"```text\n{file_tree}\n```\n\n"
+            "**How to fix:**\n"
+            "Please ensure that the `src/` folder (or the `.py` files inside it) and the `data/` folder "
+            "are uploaded to your GitHub repository."
+        )
+        st.stop()
 
 # Custom minimal CSS to enhance readability, typography, and card presentation
 st.markdown(
