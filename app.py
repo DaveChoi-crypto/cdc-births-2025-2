@@ -7,7 +7,16 @@ Author: Development Agent (Pair-programmed with User)
 Dataset: CDC Provisional Natality Data (2025)
 """
 
+import sys
+from pathlib import Path
 from typing import List, Tuple
+
+# Ensure project root is in sys.path so modules in 'src' can be imported reliably
+# on cloud deployment platforms such as Streamlit Community Cloud
+ROOT_DIR = Path(__file__).resolve().parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 import pandas as pd
 import streamlit as st
 
